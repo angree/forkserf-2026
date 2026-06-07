@@ -4392,11 +4392,16 @@ Viewport::handle_dbl_click(int lx, int ly, Event::Button button) {
     return false;
   }
   if (option_Sett1DoubleClick){
-    // Settlers1-style double-click = build.  Use the engine's own screen->map
-    //  mapping (hex-correct) instead of a manual collider: if the double-click
-    //  lands on the currently selected map tile, build there by emulating panel
-    //  button "1" (exactly what pressing the "1" key does).  Routing through the
-    //  viewport already ensures clicks on the panel/popups never reach here.
+    // While building a road, a double-click auto-routes the whole road to the
+    //  double-clicked tile (Settlers 2 style): reuse handle_special_click's
+    //  road-building branch (pathfinder_map -> extend_road).
+    if (interface->is_building_road()){
+      return handle_special_click(lx, ly);
+    }
+    // Otherwise (not building a road): build at the selected tile.  Use the
+    //  engine's own screen->map mapping (hex-correct) instead of a manual
+    //  collider: if the double-click lands on the currently selected map tile,
+    //  build there by emulating panel button "1" (what pressing "1" does).
     if (map_pos_from_screen_pix(lx, ly) == interface->get_map_cursor_pos()){
       interface->get_panel_bar()->activate_button(0);
       return true;

@@ -29,7 +29,7 @@ Game Information Website
 Current Release
 ===============
 
-version 0.6.4 (fork by Grzegorz Korycki, 2026) -- based on upstream Forkserf release 0.6.3
+version 0.6.5 (fork by Grzegorz Korycki, 2026) -- based on upstream Forkserf release 0.6.3
 
 
 Play
