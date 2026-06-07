@@ -107,6 +107,7 @@ GameOptions::load_options_from_file(){
   option_SpecialClickBoth = meta_main->value("options", "specialclickboth", option_SpecialClickBoth);
   option_SpecialClickMiddle = meta_main->value("options", "specialclickmiddle", option_SpecialClickMiddle);
   option_SpecialClickDouble = meta_main->value("options", "specialclickdouble", option_SpecialClickDouble);
+  option_Sett1DoubleClick = meta_main->value("options", "sett1doubleclick", option_Sett1DoubleClick);
   option_SailorsMoveFaster = meta_main->value("options", "sailorsmovefaster", option_SailorsMoveFaster);
   option_WaterDepthLuminosity = meta_main->value("options", "waterdepthluminosity", option_WaterDepthLuminosity);
   option_RandomizeInstruments = meta_main->value("options", "randomizeinstruments", option_RandomizeInstruments);
@@ -164,6 +165,7 @@ GameOptions::save_options_to_file(){
   file << "SpecialClickBoth=" << option_SpecialClickBoth << "\n";
   file << "SpecialClickMiddle=" << option_SpecialClickMiddle << "\n";
   file << "SpecialClickDouble=" << option_SpecialClickDouble << "\n";
+  file << "Sett1DoubleClick=" << option_Sett1DoubleClick << "\n";
   file << "SailorsMoveFaster=" << option_SailorsMoveFaster << "\n";
   file << "WaterDepthLuminosity=" << option_WaterDepthLuminosity << "\n";
   file << "RandomizeInstruments=" << option_RandomizeInstruments << "\n";

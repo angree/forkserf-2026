@@ -2,6 +2,7 @@
  * event_loop-sdl.cc - User and system events handling
  *
  * Copyright (C) 2012-2018  Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2026  Grzegorz Korycki
  *
  * This file is part of freeserf.
  *
@@ -225,13 +226,16 @@ EventLoopSDL::run() {
             }
             //Log::Debug["event_loop-sdl.cc"] << "inside EventLoopSDL::run(), type SDL_MOUSEBUTTONUP, foo";
 
-            if (option_SpecialClickDouble){
+            if (option_Sett1DoubleClick){
               if (current_ticks - last_click[event.button.button] <
                     MOUSE_TIME_SENSITIVITY &&
                   event.button.x >= (last_click_x - MOUSE_MOVE_SENSITIVITY) &&
                   event.button.x <= (last_click_x + MOUSE_MOVE_SENSITIVITY) &&
                   event.button.y >= (last_click_y - MOUSE_MOVE_SENSITIVITY) &&
                   event.button.y <= (last_click_y + MOUSE_MOVE_SENSITIVITY)) {
+                // Route the double-click through the GUI so it is position-aware
+                //  (only the object under the cursor handles it).  The viewport
+                //  decides build-vs-info based on option_Sett1DoubleClick.
                 notify_dbl_click(x, y, unscaled_x, unscaled_y, (Event::Button)event.button.button);
               }
               //Log::Debug["event_loop-sdl.cc"] << "inside EventLoopSDL::run(), type SDL_MOUSEBUTTONUP, foo2";

@@ -6,6 +6,12 @@ Forkserf
 
 A continuation of Freeserf, a SerfCity/Settlers1 clone in C/C++.  Freeserf was created by jonls and wdigger.  
 
+This repository is a fork maintained by Grzegorz Korycki, based on Forkserf's `stable`
+branch (upstream release v0.6.3).  Added feature: a "Settlers 1 style double-click to
+build" option (the "DoubleClick" toggle in game options) -- a double left-click on the
+selected map tile builds there, exactly like pressing the "1" panel button; when the
+option is off, the double-click is inactive.  
+
 Game Information Website
 ========================
 
@@ -15,7 +21,7 @@ Game Information Website
 Current Release
 ===============
 
-version 0.6.2 released Feb15 2023
+version 0.6.4 (fork by Grzegorz Korycki, 2026) -- based on upstream Forkserf release 0.6.3
 
 
 Play

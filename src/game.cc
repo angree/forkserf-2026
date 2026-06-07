@@ -2,6 +2,7 @@
  * game.cc - Gameplay related functions
  *
  * Copyright (C) 2013-2017  Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2026  Grzegorz Korycki
  *
  * This file is part of freeserf.
  *
@@ -69,6 +70,7 @@ bool option_InvertWheelZoom = false;
 bool option_SpecialClickBoth = true;
 bool option_SpecialClickMiddle = true;
 bool option_SpecialClickDouble = true;
+bool option_Sett1DoubleClick = true;   // Settlers1-style: double LEFT-click builds (emulates panel key "1"); takes precedence over SpecialClickDouble for the left button
 bool option_SailorsMoveFaster = true;
 bool option_WaterDepthLuminosity = true;
 bool option_RandomizeInstruments = false;  // only affects DOS music
@@ -258,6 +260,7 @@ Game::reset_game_options_defaults() {
   option_SpecialClickBoth = true;
   option_SpecialClickMiddle = true;
   option_SpecialClickDouble = true;
+  option_Sett1DoubleClick = true;
   option_SailorsMoveFaster = true;
   option_WaterDepthLuminosity = true;
   option_RandomizeInstruments = false;  // only affects DOS music

@@ -2,6 +2,7 @@
  * viewport.cc - Viewport GUI component
  *
  * Copyright (C) 2013-2019  Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2026  Grzegorz Korycki
  *
  * This file is part of freeserf.
  *
@@ -37,6 +38,7 @@
 #include "src/gfx.h"
 #include "src/interface.h"
 #include "src/popup.h"
+#include "src/panel.h"
 #include "src/pathfinder.h"
 
 #define MAP_TILE_WIDTH   32
@@ -4386,11 +4388,23 @@ Viewport::handle_dbl_click(int lx, int ly, Event::Button button) {
     //return false; // allow click after drag otherwise it makes the UI feel unresponsive
   }
   //Log::Debug["viewport.cc"] << "inside Viewport::handle_dbl_click, button " << button;
-  // for now, this does nothing except call special-click function
   if (button != Event::ButtonLeft){
     return false;
   }
-  return handle_special_click(lx, ly);
+  if (option_Sett1DoubleClick){
+    // Settlers1-style double-click = build.  Use the engine's own screen->map
+    //  mapping (hex-correct) instead of a manual collider: if the double-click
+    //  lands on the currently selected map tile, build there by emulating panel
+    //  button "1" (exactly what pressing the "1" key does).  Routing through the
+    //  viewport already ensures clicks on the panel/popups never reach here.
+    if (map_pos_from_screen_pix(lx, ly) == interface->get_map_cursor_pos()){
+      interface->get_panel_bar()->activate_button(0);
+      return true;
+    }
+    return false;
+  }
+  // double-click is build-only now (Settlers1 style); no fall back to special-click info
+  return false;
 }
 
 bool

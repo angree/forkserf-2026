@@ -2,6 +2,7 @@
  * popup.cc - Popup GUI component
  *
  * Copyright (C) 2013-2018  Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2026  Grzegorz Korycki
  *
  * This file is part of freeserf.
  *
@@ -2118,7 +2119,7 @@ PopupBox::draw_options_box() {
   draw_green_string(17, 96,  "Middle Button");
   draw_popup_icon(31, 93, option_SpecialClickMiddle ? 288 : 220);
   draw_green_string(19, 111, "DoubleClick");
-  draw_popup_icon(31, 108, option_SpecialClickDouble ? 288 : 220);
+  draw_popup_icon(31, 108, option_Sett1DoubleClick ? 288 : 220);
 
 
   //draw_popup_icon(13, 109, 0x3d); /* flipbox to game options */
@@ -4309,16 +4310,10 @@ PopupBox::handle_action(int action, int x_, int /*y_*/) {
     GameOptions::get_instance().save_options_to_file();
     break;
   case ACTION_GAME_OPTIONS_SpecialClickDouble:
-    if (option_SpecialClickDouble){
-      if (!option_SpecialClickMiddle && !option_SpecialClickBoth){
-        // cannot disable all methods, must leave one
-        play_sound(Audio::TypeSfxNotAccepted);
-      }else{
-        option_SpecialClickDouble = false;
-      }
-    } else{
-      option_SpecialClickDouble = true;
-    }
+    // This "DoubleClick" checkbox now controls the Settlers1-style
+    //  double-click-to-build feature (free independent toggle).  When off, the
+    //  double-click is completely inactive (see event_loop-sdl.cc gate).
+    option_Sett1DoubleClick = !option_Sett1DoubleClick;
     GameOptions::get_instance().save_options_to_file();
     break;
   case ACTION_GAME_OPTIONS_SailorsMoveFaster:

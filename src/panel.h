@@ -2,6 +2,7 @@
  * panel.h - Panel GUI component
  *
  * Copyright (C) 2012  Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2026  Grzegorz Korycki
  *
  * This file is part of freeserf.
  *
@@ -68,6 +69,9 @@ class PanelBar : public GuiObject, public Timer::Handler {
   virtual ~PanelBar();
 
   void update();
+  // Emulate clicking a panel button (same effect as pressing the matching "1".."5"
+  //  key).  Used by the Settlers1-style double-click-to-build feature.
+  void activate_button(int button) { button_click(button); }
 
  protected:
   void draw_panel_frame();
