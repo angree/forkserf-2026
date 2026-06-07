@@ -1,16 +1,24 @@
-DEVELOPMENT HAS NOW RESUMED FOR THE 2023-2024 FALL/WINTER/SPRING SEASON
-========
+Forkserf 2026 -- fork by Grzegorz Korycki
+=========================================
 
-Forkserf
-========
+A 2026 fork of Forkserf (a SerfCity / Settlers 1 clone in C/C++).  The goal of this fork
+is to bring the game closer to the original Settlers / Serf City -- in particular its
+classic "fast" UI mechanics -- through small, focused changes.
 
-A continuation of Freeserf, a SerfCity/Settlers1 clone in C/C++.  Freeserf was created by jonls and wdigger.  
+Changes in this fork
+--------------------
 
-This repository is a fork maintained by Grzegorz Korycki, based on Forkserf's `stable`
-branch (upstream release v0.6.3).  Added feature: a "Settlers 1 style double-click to
-build" option (the "DoubleClick" toggle in game options) -- a double left-click on the
-selected map tile builds there, exactly like pressing the "1" panel button; when the
-option is off, the double-click is inactive.  
+- **Settlers 1 style double-click to build**: a double left-click on the selected map
+  tile builds there, exactly like pressing the "1" panel button.  Toggle it with the
+  "DoubleClick" option in the in-game options; when it is off, the double-click is
+  inactive.
+
+Based on Forkserf's `stable` branch (upstream release v0.6.3).  Forkserf is a continuation
+of Freeserf (created by jonls and wdigger).  Upstream: https://github.com/forkserf/forkserf
+
+
+Forkserf (upstream README follows)
+==================================
 
 Game Information Website
 ========================
