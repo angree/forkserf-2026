@@ -187,10 +187,16 @@ EventLoopSDL::run() {
 
 
     switch (event.type) {
-      case SDL_MOUSEBUTTONUP:
+      case SDL_MOUSEBUTTONUP: {
         //Log::Debug["event_loop-sdl.cc"] << "inside EventLoopSDL::run(), type SDL_MOUSEBUTTONUP";
+        // If this button-up ends a drag (viewport/minimap scroll), it must NOT also be
+        //  treated as a click.  Otherwise releasing the right button after scrolling fires
+        //  a right-click (which closes the popup/minimap we were panning), and releasing the
+        //  left button after scrolling fires an unintended left-click on the map.
+        bool was_dragging = false;
         if (drag_button == event.button.button) {
           drag_button = 0;
+          was_dragging = true;
           //Log::Debug["event_loop-sdl.cc"] << "inside EventLoopSDL::run(), type SDL_MOUSEBUTTONUP, drag_button = 0";
         }
 
@@ -202,7 +208,7 @@ EventLoopSDL::run() {
           is_dragging_popup = false;
         }else{
 
-          if (event.button.button <= 3) {
+          if (event.button.button <= 3 && !was_dragging) {
             //Log::Debug["event_loop-sdl.cc"] << "inside EventLoopSDL::run(), type SDL_MOUSEBUTTONUP, event.button.button " << event.button.button << " is <= 3";
             int x = static_cast<int>(static_cast<float>(event.button.x) * zoom_factor * screen_factor_x);
             int y = static_cast<int>(static_cast<float>(event.button.y) * zoom_factor * screen_factor_y);
@@ -258,6 +264,7 @@ EventLoopSDL::run() {
         //}
 
         break;
+      }
       case SDL_MOUSEBUTTONDOWN:
         //Log::Debug["event_loop-sdl.cc"] << "inside EventLoopSDL::run(), type SDL_MOUSEBUTTONDOWN";
         if (event.button.button <= 3) {

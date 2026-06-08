@@ -38,6 +38,87 @@
 # include <SDL.h>
 #endif  // WIN32
 
+// ---- sprite export (fork tool) --------------------------------------------
+#include <vector>
+#include <SDL.h>
+#include <SDL_image.h>
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
+
+// Export every sprite from the loaded data source to <outdir> as PNG, compositing
+//  transparency onto a WHITE background (the saved PNGs are fully opaque, white-backed).
+//  Files are named <resource>_<index>.png.  Invoked by the -E command-line option.
+static void
+export_all_sprites(const std::string &outdir) {
+#ifdef _WIN32
+  _mkdir(outdir.c_str());
+#else
+  mkdir(outdir.c_str(), 0755);
+#endif
+  IMG_Init(IMG_INIT_PNG);
+  Data &data = Data::get_instance();
+  Data::PSource src = data.get_data_source();
+  if (!src) {
+    Log::Error["freeserf.cc"] << "export_all_sprites: no data source loaded";
+    return;
+  }
+  Data::Sprite::Color tint = {0x00, 0x93, 0x87, 0xff};  // BGRA tint for player-coloured sprites
+  int total = 0;
+  for (int r = Data::AssetArtLandscape; r <= Data::AssetCursor; r++) {
+    Data::Resource res = static_cast<Data::Resource>(r);
+    if (Data::get_resource_type(res) != Data::TypeSprite) {
+      continue;
+    }
+    unsigned int count = Data::get_resource_count(res);
+    std::string resname = Data::get_resource_name(res);
+    for (size_t c = 0; c < resname.size(); c++) {  // sanitise for filename
+      char ch = resname[c];
+      if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') ||
+            (ch >= 'A' && ch <= 'Z'))) {
+        resname[c] = '_';
+      }
+    }
+    for (unsigned int i = 0; i < count; i++) {
+      Data::PSprite s;
+      try {
+        s = src->get_sprite(res, i, tint);
+      } catch (...) {
+        s = nullptr;
+      }
+      if (!s) {
+        continue;
+      }
+      int w = static_cast<int>(s->get_width());
+      int h = static_cast<int>(s->get_height());
+      uint8_t *bgra = s->get_data();
+      if (w <= 0 || h <= 0 || bgra == nullptr) {
+        continue;
+      }
+      std::vector<uint8_t> buf(static_cast<size_t>(w) * static_cast<size_t>(h) * 4);
+      for (int p = 0; p < w * h; p++) {  // composite onto white
+        float af = bgra[p * 4 + 3] / 255.0f;
+        buf[p * 4 + 0] = static_cast<uint8_t>(bgra[p * 4 + 0] * af + 255.0f * (1.0f - af));
+        buf[p * 4 + 1] = static_cast<uint8_t>(bgra[p * 4 + 1] * af + 255.0f * (1.0f - af));
+        buf[p * 4 + 2] = static_cast<uint8_t>(bgra[p * 4 + 2] * af + 255.0f * (1.0f - af));
+        buf[p * 4 + 3] = 255;
+      }
+      SDL_Surface *surf = SDL_CreateRGBSurfaceWithFormatFrom(
+          buf.data(), w, h, 32, w * 4, SDL_PIXELFORMAT_ARGB8888);
+      if (surf != nullptr) {
+        std::string fname = outdir + "/" + resname + "_" + std::to_string(i) + ".png";
+        IMG_SavePNG(surf, fname.c_str());
+        SDL_FreeSurface(surf);
+        total++;
+      }
+    }
+  }
+  Log::Info["freeserf.cc"] << "export_all_sprites: wrote " << total
+                           << " sprites (white background) to " << outdir;
+}
+// ---------------------------------------------------------------------------
 
 int
 main(int argc, char *argv[]) {
@@ -55,6 +136,7 @@ main(int argc, char *argv[]) {
 
   std::string data_dir;
   std::string save_file;
+  std::string export_sprites_dir;
 
   unsigned int screen_width = 0;
   unsigned int screen_height = 0;
@@ -102,6 +184,11 @@ main(int argc, char *argv[]) {
                   s >> screen_height;
                   return true;
                 });
+  command_line.add_option('E', "Export all sprites to DIR as PNG (white background) and exit")
+                .add_parameter("DIR", [&export_sprites_dir](std::istream& s) {
+                  std::getline(s, export_sprites_dir);
+                  return true;
+                });
   //command_line.set_comment("Please report bugs to <" PACKAGE_BUGREPORT ">");
   if (!command_line.process(argc, argv)) {
     return EXIT_FAILURE;
@@ -123,6 +210,12 @@ main(int argc, char *argv[]) {
   Log::Info["main"] << "Initialize graphics...";
 
   Graphics &gfx = Graphics::get_instance();
+
+  // -E DIR : dump every sprite as a white-background PNG to DIR, then exit (fork tool).
+  if (!export_sprites_dir.empty()) {
+    export_all_sprites(export_sprites_dir);
+    return EXIT_SUCCESS;
+  }
 
   // to fix weird bug with crash when audio loads when Log::Level is Info/Warn or higher
   //  store the current log level so that it can be briefly set to Debug when calling the

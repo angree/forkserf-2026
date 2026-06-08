@@ -159,6 +159,8 @@ class Player : public GameObject {
   int ai_value_4;
   int ai_value_5;
   size_t ai_intelligence;
+  unsigned int intelligence_level = 40;  // raw 0-40 from the game-init Intelligence slider; default 40 (full)
+                                         //  so loaded saves (where init() isn't called) keep full-speed AI
 
   int player_stat_history[16][112];
   int resource_count_history[26][120];
@@ -183,6 +185,9 @@ class Player : public GameObject {
 
   Color get_color() const { return color; }
   size_t get_face() const { return face; }
+  // 0-40 AI intelligence (from game-init slider).  Lower = the AI thinks/builds slower (see
+  //  AI::sleep_speed_adjusted).  40 = full speed (default).
+  unsigned int get_intelligence() const { return intelligence_level; }
 
   /* Whether player has built the initial castle. */
   bool has_castle() const { return (flags & 1); }

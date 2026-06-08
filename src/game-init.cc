@@ -721,9 +721,9 @@ GameInitBox::handle_player_click(unsigned int player_index, int cx, int cy) {
         player->set_supplies(value);
       } else if (cx > 6 && cx < 12) {
         /* Intelligence */
-        // tlongstretch - disallow changing intelligence as it does nothing and this could be confusing to players
-        //player->set_intelligence(value);
-        play_sound(Audio::TypeSfxNotAccepted);
+        // re-enabled (fork): lower intelligence now makes the AI slower (longer decision/build
+        //  cooldowns via AI::sleep_speed_adjusted), so it is a real difficulty setting again.
+        player->set_intelligence(value);
       } else if (cx > 12 && cx < 18) {
         /* Reproduction */
         player->set_reproduction(value);

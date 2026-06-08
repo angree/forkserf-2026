@@ -185,6 +185,7 @@ Player::init(unsigned int _intelligence, unsigned int _supplies,
   initial_supplies = _supplies;
   reproduction_reset = (60 - (size_t)_reproduction) * 50;
   ai_intelligence = (1300 * (size_t)_intelligence) + 13535;
+  intelligence_level = _intelligence;  // store raw 0-40 so the AI can scale its decision/build speed
   reproduction_counter = static_cast<int>(reproduction_reset);
 
   // for option_FogOfWar
@@ -1142,8 +1143,16 @@ Player::get_military_score() const {
 
 int
 Player::get_score() const {
-  int mil_score = get_military_score();
-  return total_building_score + ((total_land_area + mil_score) >> 4);
+  // "ALL" / combined statistic.  The original formula used get_military_score() -- which is inflated
+  //  by ~131072x (a (2048+morale/2)*(score<<6) factor) -- so ALL was effectively a 1:1 copy of the
+  //  military score, drowning out buildings and land.  Use a balanced composite of the three raw
+  //  aspects instead so ALL reflects overall development.  Raw scales differ (land >> buildings ~
+  //  military), so buildings and military are boosted to contribute comparably.  Weights are tunable.
+  //  NOTE: display only -- the winner is still decided from the military score (see Game::update,
+  //  player_score_leader), and the AI does not use this value.
+  return static_cast<int>(total_building_score) * 4
+       + static_cast<int>(total_land_area)
+       + static_cast<int>(total_military_score) * 4;
 }
 
 ResourceMap

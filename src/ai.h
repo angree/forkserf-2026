@@ -51,6 +51,8 @@ class AI {
   Flags *flags;        //or maybe just create a copy and move the pointer to point to that new copy instead?? is that easier than changing all the foreach Flag loops?   ?  is this still used?  oct28 2020
   Flags flags_static_copy;  // store the copy here each time it is fetched from game->get_flags    ?  is this still used?  oct28 2020
   unsigned int loop_count;
+  unsigned int last_building_placed_tick = 0;  // game tick of this AI's last building placement;
+                                               //  used by the IQ build-rate throttle in build_near_pos
   unsigned int player_index;
   std::string ai_status;        // used to describe what AI is doing when AI overlay is on (top-left corner of screen)
   unsigned int unfinished_building_count;
@@ -206,6 +208,10 @@ class AI {
       // less increase in AI speed as game speed increases, capped around 9x
       //msec_ = msec_ * 1/((speed - 1) / 4);  // this works pretty well, at game speed 40 ai pause time is about 9% of game speed 2
     }
+    // NOTE: AI intelligence intentionally does NOT slow these sleeps.  Doing so blocked the whole AI
+    //  thread, so at low IQ the multi-loop economy pipeline (place mine -> connect road -> send geologist
+    //  -> build smelter -> tools...) could never complete and the AI froze instead of just developing
+    //  slower.  The IQ handicap is now a game-tick rate-limit on building PLACEMENT (see build_near_pos).
     //AILogDebug["sleep_speed_adjusted"] << "msec: " << msec << ", game speed: " << speed << ", adjusted msec: " << int(msec_);
     msec = msec_;
     std::this_thread::sleep_for(std::chrono::milliseconds(msec + 1));

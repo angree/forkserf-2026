@@ -2872,6 +2872,24 @@ AI::count_objects_near_pos(MapPos center_pos, unsigned int distance, Map::Object
 //
 MapPos
 AI::build_near_pos(MapPos center_pos, unsigned int distance, Building::Type building_type, Direction optional_fill_dir) {
+  // IQ build-rate throttle (fork difficulty feature).  A low-intelligence AI may place a NEW building
+  //  only every so often, measured in GAME TICKS so it is independent of game speed.  Unlike the old
+  //  sleep-based slowdown this does NOT block the AI thread: the AI keeps running all its loops (roads,
+  //  geologists, the whole economy pipeline), so nothing collapses -- only the rate that new buildings
+  //  appear is limited.  intel 40 = no throttle; the interval grows as IQ drops (tune the 2000 below).
+  {
+    unsigned int intel = (player != nullptr) ? player->get_intelligence() : 40;
+    if (intel < 40) {
+      if (intel < 4) { intel = 4; }  // avoid div-by-zero / runaway intervals
+      unsigned int interval = static_cast<unsigned int>((40.0 / static_cast<double>(intel) - 1.0) * 2000.0);
+      if (game->get_tick() - last_building_placed_tick < interval) {
+        AILogDebug["util_build_near_pos"] << "IQ throttle (intel " << intel << "): only "
+            << (game->get_tick() - last_building_placed_tick) << " of " << interval
+            << " ticks since last placement, deferring build of " << NameBuilding[building_type];
+        return notplaced_pos;
+      }
+    }
+  }
   // time this function for debugging
   std::clock_t start;
   double duration;
@@ -3173,6 +3191,9 @@ AI::build_near_pos(MapPos center_pos, unsigned int distance, Building::Type buil
 
     duration = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC);
     AILogDebug["util_build_near_pos"] << "successful util_build_near_pos, built building of type " << NameBuilding[building_type] << " at pos " << pos << ", call took " << duration;
+
+    // record placement time for the IQ build-rate throttle (see top of this function)
+    last_building_placed_tick = game->get_tick();
 
     // sleep a bit to be more human-like
     sleep_speed_adjusted(2000);

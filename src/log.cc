@@ -49,10 +49,13 @@ Log::Logger Log::Error(Log::LevelError, "Error");
 
 Log::Log() {
 #ifdef WIN32
-  if (::AttachConsole(ATTACH_PARENT_PROCESS)) {
-    FILE *f = freopen("CONOUT$", "w", stdout);
-    f = freopen("CONOUT$", "w", stderr);
-  }
+  // Do NOT attach to the parent process's console.  When the game is launched from another shell
+  //  (e.g. a dev/automation terminal) this used to redirect all game log output into THAT terminal
+  //  and spam it.  Everything already goes to console_out.txt via Log::set_file(), so nothing is lost.
+  // if (::AttachConsole(ATTACH_PARENT_PROCESS)) {
+  //   FILE *f = freopen("CONOUT$", "w", stdout);
+  //   f = freopen("CONOUT$", "w", stderr);
+  // }
 #endif  // WIN32
 }
 

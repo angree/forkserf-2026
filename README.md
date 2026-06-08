@@ -23,6 +23,40 @@ Changes in this fork
 - UI fixes: the options window stays centred/uncut when the window is resized; the
   message box closes with the tick or ESC; the in-game version number is shown correctly.
 
+AI fixes (0.7.0)
+----------------
+
+The advanced (tlongstretch) AI had several behaviours that wrecked its own economy or made it
+impossible to play against as an easy opponent.  This fork addresses them:
+
+- **The AI no longer burns its own productive farms / fishers / pig farms.**  An "excess food"
+  cull demolished food producers whenever finished food was briefly high, which broke the
+  wheat -> mill -> baker chain and caused an endless build/burn loop (the farm burned even when
+  fully road-connected, and was often never rebuilt).  Surplus production now simply idles.
+- **No more burning "excess" lumberjacks / foresters**, nor the unproductive 3rd lumberjack "to
+  relocate it" -- the same wasteful build/burn churn for no real gain.
+- **The AI no longer burns a building (or a freshly placed mine) just because its flag is
+  momentarily not road-connected.**  Transient road churn used to make it torch productive
+  buildings; now it keeps them and retries connecting each loop.  Only depleted mines and
+  out-of-stone stonecutters are still demolished (the only cases that make sense).
+- **The Intelligence slider works again as a real difficulty setting.**  The advanced AI ignored
+  the original Intelligence value (the slider was disabled and the AI always played at full
+  strength), so there was no way to set up an easier opponent.  Lowering Intelligence now
+  rate-limits how often that AI places new buildings (per-player, measured in game ticks), so a
+  low-IQ opponent develops slower -- without ever stalling its economy.
+- **The "ALL" statistic is a real composite again.**  The combined score used a hugely inflated
+  military term, so "ALL" was effectively a 1:1 copy of the military score and hid economic/land
+  progress.  It is now a balanced mix of buildings + land + military (display only; the winner
+  logic is unchanged).
+
+Other fixes / tools
+-------------------
+
+- **Map dragging fixed**: dragging the view with the right (or left) button no longer fires a
+  stray click on release (which used to close the popup/minimap you were panning over).
+- **Sprite export tool**: run `Forkserf -E DIR` to dump every game sprite to PNG (composited onto
+  a white background) into DIR, then exit -- handy for modding or editing the graphics.
+
 Based on Forkserf's `stable` branch (upstream release v0.6.3).  Forkserf is a continuation
 of Freeserf (created by jonls and wdigger).  Upstream: https://github.com/forkserf/forkserf
 
@@ -39,7 +73,7 @@ Game Information Website
 Current Release
 ===============
 
-version 0.6.6 (fork by Grzegorz Korycki, 2026) -- based on upstream Forkserf release 0.6.3
+version 0.7.0 (fork by Grzegorz Korycki, 2026) -- based on upstream Forkserf release 0.6.3
 
 
 Play

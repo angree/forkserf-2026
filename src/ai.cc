@@ -693,7 +693,13 @@ AI::do_connect_disconnected_flags() {
               continue;
             }
           }else{
-            must_demolish_building = true;
+            // fork fix: NEVER burn a building merely because its flag can't be (re)connected this loop.
+            //  build_best_road already ran above, so anything reconnectable was just relinked; anything
+            //  still disconnected is left standing (with its flag) and retried next loop.  Burning roadless
+            //  buildings (farms, etc.) was a major bug source.  Only depleted mines / out-of-stone
+            //  stonecutters get demolished, by their own dedicated functions.
+            AILogDebug["do_connect_disconnected_flags"] << "unconnectable building at pos " << map->move_up_left(flag_pos) << " of type " << NameBuilding[flag->get_building()->get_type()] << " - NOT burning it; will retry reconnect next loop";
+            continue;
           }
         }
         // burn any attached building and destroy the flag
@@ -1823,6 +1829,9 @@ void
 AI::do_demolish_unproductive_3rd_lumberjacks() {
   AILogDebug["do_demolish_unproductive_3rd_lumberjacks"] << "inside do_demolish_unproductive_3rd_lumberjacks";
   ai_status.assign("do_demolish_unproductive_3rd_lumberjacks");
+  // DISABLED (fork fix): do not burn a lumberjack just to "relocate" it -- causes build/burn churn for
+  //  little gain.  An idle lumberjack with few trees costs nothing.
+  return;
   Game::ListBuildings buildings = game->get_player_buildings(player);
   // find all sawmills in the realm, and check the area around each one
   // if three completed lumberjacks and a ranger are nearby, but still not many trees,
@@ -2284,6 +2293,9 @@ AI::do_demolish_excess_lumberjacks() {
   ai_status.assign("do_demolish_excess_lumberjacks");
   if(get_stock_inv() == nullptr)
     return;
+  // DISABLED (fork fix): burning producers for a temporary "excess" is almost pure loss -- the AI just
+  //  rebuilds them later (build/burn oscillation).  An idle lumberjack costs nothing.  Let it idle.
+  return;
   int lumberjack_count = stock_building_counts.at(inventory_pos).count[Building::TypeLumberjack];
   if (stock_building_counts.at(inventory_pos).excess_wood == true && lumberjack_count > 1) {
     AILogDebug["do_demolish_excess_lumberjacks"] << inventory_pos << " excess_wood true and lumberjack_count is " << lumberjack_count << ".  Burning all but one lumberjack (nearest to this stock)";
@@ -2325,6 +2337,8 @@ AI::do_demolish_excess_foresters() {
   ai_status.assign("do_demolish_excess_foresters");
   if(get_stock_inv() == nullptr)
     return;
+  // DISABLED (fork fix): see do_demolish_excess_lumberjacks -- never burn producers for temporary excess.
+  return;
   
   //unsigned int wood_count = get_stock_inv()->get_count_of(Resource::TypePlank) + stock_res_sitting_at_flags.at(inventory_pos)[Resource::TypePlank];
   //wood_count += get_stock_inv()->get_count_of(Resource::TypeLumber) + stock_res_sitting_at_flags.at(inventory_pos)[Resource::TypeLumber];
@@ -2401,6 +2415,12 @@ AI::do_demolish_excess_food_buildings() {
   ai_status.assign("do_demolish_excess_food_buildings");
   if(get_stock_inv() == nullptr)
     return;
+  // DISABLED (fork fix): never burn productive food buildings for "excess food".  Farms/fishers/pig
+  //  farms produce at no cost, inventories have no hard food cap, and fish do NOT deplete in Settlers1.
+  //  Burning them breaks the wheat->mill->baker chain and causes a build/burn oscillation -- this is
+  //  the reported "AI keeps burning its own farms" bug (fires even when the farm is fully road-connected,
+  //  because this cull never checks connectivity).  Let surplus food production simply idle instead.
+  return;
   if (stock_building_counts.at(inventory_pos).excess_foods == true){
     AILogDebug["do_demolish_excess_food_buildings"] << inventory_pos << " excess_foods is true, burning all food buildings attached to this stock";
     Game::ListBuildings buildings = game->get_player_buildings(player);
@@ -3880,25 +3900,9 @@ AI::do_connect_coal_mines() {
         road_options.set(RoadOption::AllowPassthru);
       }
       if (!was_built) {
-        AILogInfo["do_connect_coal_mines"] << inventory_pos << " failed to connect coal mine to road network!  demolishing it and its flag ";
-        // the build_best road call can be long, double-check to make sure this building and flag even still exist!
-        Flag *failed_flag = game->get_flag_at_pos(flag_pos);
-        Building *failed_building = game->get_building_at_pos(building_pos);
-        mutex_lock("AI::do_connect_coal_mines calling demolish flag&building (failed to connect coal mine)");
-        if (failed_building == nullptr){
-          AILogInfo["do_connect_coal_mines"] << inventory_pos << " the failed building no longer exists, nothing to demolish";
-        }else{
-          game->demolish_building(building_pos, player);
-        }
-        AILogDebug["do_connect_coal_mines"] << inventory_pos << " demolishing flag for coal mine that could not be connected to road network";
-        if (failed_flag == nullptr){
-          AILogInfo["do_connect_coal_mines"] << inventory_pos << " the failed flag no longer exists, nothing to demolish";
-        }else{
-          game->demolish_flag(flag_pos, player);
-        }
-        mutex_unlock();
-        // sleep to appear more human
-        sleep_speed_adjusted(3000);
+        // fork fix: do NOT burn a roadless mine; leave it + its flag in place and retry connecting it on a
+        //  later loop.  Burning roadless buildings was a bug source and throws away a secured ore spot.
+        AILogInfo["do_connect_coal_mines"] << inventory_pos << " could not connect coal mine to road network yet; leaving it to retry next loop (NOT burning it)";
       }
       else {
         AILogInfo["do_connect_coal_mines"] << inventory_pos << " successfully connected unfinished coal mine to road network";
@@ -3955,25 +3959,9 @@ AI::do_connect_iron_mines() {
         road_options.set(RoadOption::AllowPassthru);
       }
       if (!was_built) {
-        AILogInfo["do_connect_iron_mines"] << inventory_pos << " failed to connect iron mine to road network!  demolishing it and its flag ";
-        // the build_best road call can be long, double-check to make sure this building and flag even still exist!
-        Flag *failed_flag = game->get_flag_at_pos(flag_pos);
-        Building *failed_building = game->get_building_at_pos(building_pos);
-        mutex_lock("AI::do_connect_iron_mines calling demolish flag&building (failed to connect iron mine)");
-        if (failed_building == nullptr){
-          AILogInfo["do_connect_iron_mines"] << inventory_pos << " the failed building no longer exists, nothing to demolish";
-        }else{
-          game->demolish_building(building_pos, player);
-        }
-        AILogDebug["do_connect_iron_mines"] << inventory_pos << " demolishing flag for iron mine that could not be connected to road network";
-        if (failed_flag == nullptr){
-          AILogInfo["do_connect_iron_mines"] << inventory_pos << " the failed flag no longer exists, nothing to demolish";
-        }else{
-          game->demolish_flag(flag_pos, player);
-        }
-        mutex_unlock();
-        // sleep to appear more human
-        sleep_speed_adjusted(3000);
+        // fork fix: do NOT burn a roadless mine; leave it + its flag in place and retry connecting it on a
+        //  later loop.  Burning roadless buildings was a bug source and throws away a secured ore spot.
+        AILogInfo["do_connect_iron_mines"] << inventory_pos << " could not connect iron mine to road network yet; leaving it to retry next loop (NOT burning it)";
       }
       else {
         AILogInfo["do_connect_iron_mines"] << inventory_pos << " successfully connected unfinished iron mine to road network";
@@ -4022,25 +4010,9 @@ AI::do_connect_stone_mines() {
         road_options.set(RoadOption::AllowPassthru);
       }
       if (!was_built) {
-        AILogInfo["do_connect_stone_mines"] << inventory_pos << " failed to connect stone mine to road network!  demolishing it and its flag ";
-        // the build_best road call can be long, double-check to make sure this building and flag even still exist!
-        Flag *failed_flag = game->get_flag_at_pos(flag_pos);
-        Building *failed_building = game->get_building_at_pos(building_pos);
-        mutex_lock("AI::do_connect_stone_mines calling demolish flag&building (failed to connect stone mine)");
-        if (failed_building == nullptr){
-          AILogInfo["do_connect_stone_mines"] << inventory_pos << " the failed building no longer exists, nothing to demolish";
-        }else{
-          game->demolish_building(building_pos, player);
-        }
-        AILogDebug["do_connect_stone_mines"] << inventory_pos << " demolishing flag for stone mine that could not be connected to road network";
-        if (failed_flag == nullptr){
-          AILogInfo["do_connect_stone_mines"] << inventory_pos << " the failed flag no longer exists, nothing to demolish";
-        }else{
-          game->demolish_flag(flag_pos, player);
-        }
-        mutex_unlock();
-        // sleep to appear more human
-        sleep_speed_adjusted(3000);
+        // fork fix: do NOT burn a roadless mine; leave it + its flag in place and retry connecting it on a
+        //  later loop.  Burning roadless buildings was a bug source and throws away a secured ore spot.
+        AILogInfo["do_connect_stone_mines"] << inventory_pos << " could not connect stone mine to road network yet; leaving it to retry next loop (NOT burning it)";
       }
       else {
         AILogInfo["do_connect_stone_mines"] << inventory_pos << " successfully connected unfinished stone mine to road network";
@@ -4294,25 +4266,9 @@ AI::do_build_gold_smelter_and_connect_gold_mines() {
         road_options.set(RoadOption::AllowPassthru);
       }
       if (!was_built) {
-        AILogInfo["do_build_gold_smelter_and_connect_gold_mines"] << inventory_pos << " failed to connect gold mine to road network!  demolishing it and its flag ";
-        // the build_best road call can be long, double-check to make sure this building and flag even still exist!
-        Flag *failed_flag = game->get_flag_at_pos(flag_pos);
-        Building *failed_building = game->get_building_at_pos(building_pos);
-        mutex_lock("AI::do_build_gold_smelter_and_connect_gold_mines calling demolish flag&building (failed to connect gold mine)");
-        if (failed_building == nullptr){
-          AILogInfo["do_build_gold_smelter_and_connect_gold_mines"] << inventory_pos << " the failed building no longer exists, nothing to demolish";
-        }else{
-          game->demolish_building(building_pos, player);
-        }
-        AILogDebug["do_build_gold_smelter_and_connect_gold_mines"] << inventory_pos << " demolishing flag for gold mine that could not be connected to road network";
-        if (failed_flag == nullptr){
-          AILogInfo["do_build_gold_smelter_and_connect_gold_mines"] << inventory_pos << " the failed flag no longer exists, nothing to demolish";
-        }else{
-          game->demolish_flag(flag_pos, player);
-        }
-        mutex_unlock();
-        // sleep to appear more human
-        sleep_speed_adjusted(3000);
+        // fork fix: do NOT burn a roadless mine; leave it + its flag in place and retry connecting it on a
+        //  later loop.  Burning roadless buildings was a bug source and throws away a secured ore spot.
+        AILogInfo["do_build_gold_smelter_and_connect_gold_mines"] << inventory_pos << " could not connect gold mine to road network yet; leaving it to retry next loop (NOT burning it)";
       }
       else {
         AILogInfo["do_build_gold_smelter_and_connect_gold_mines"] << inventory_pos << " successfully connected unfinished gold mine to road network";
