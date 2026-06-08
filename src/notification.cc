@@ -28,6 +28,7 @@
 #include "src/game.h"
 #include "src/debug.h"
 #include "src/data.h"
+#include "src/log.h"
 
 void
 NotificationBox::draw_icon(int ix, int iy, int sprite) {

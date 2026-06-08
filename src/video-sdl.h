@@ -103,6 +103,8 @@ class VideoSDL : public Video {
                            int y_offset, Video::Frame *dest);
   virtual void draw_frame(int dx, int dy, Video::Frame *dest, int sx, int sy,
                           Video::Frame *src, int w, int h);
+  virtual void draw_frame(int dx, int dy, Video::Frame *dest, int sx, int sy,
+                          Video::Frame *src, int sw, int sh, int dw, int dh);
   virtual void draw_rect(int x, int y, unsigned int width, unsigned int height,
                          const Video::Color color, Video::Frame *dest);
   virtual void fill_rect(int x, int y, unsigned int width, unsigned int height,

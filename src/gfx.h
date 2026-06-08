@@ -165,6 +165,8 @@ class Frame {
 
   /* Frame functions */
   void draw_frame(int dx, int dy, int sx, int sy, Frame *src, int w, int h);
+  void draw_frame(int dx, int dy, int sx, int sy, Frame *src,
+                  int sw, int sh, int dw, int dh);  // scaled blit (for UI scaling)
 
  protected:
   void draw_char_sprite(int x, int y, unsigned char c, const Color &color,

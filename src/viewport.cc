@@ -4426,6 +4426,17 @@ Viewport::handle_special_click(int lx, int ly) {
   MapPos clk_pos = map_pos_from_screen_pix(lx, ly);
 
   if (interface->is_building_road()) {
+    // make it a bit easier to hit a destination flag when auto-routing a long road:
+    //  if the clicked tile isn't a flag but an immediate neighbour is, snap to that flag
+    if (map->get_obj(clk_pos) != Map::ObjectFlag) {
+      for (int i = 1; i <= 60; i++) {  // search ~4 rings around the click for a flag to snap to
+        MapPos near_pos = map->pos_add_spirally(clk_pos, i);
+        if (map->get_obj(near_pos) == Map::ObjectFlag) {
+          clk_pos = near_pos;
+          break;
+        }
+      }
+    }
     if (clk_pos != interface->get_map_cursor_pos()) {
       MapPos pos = interface->get_building_road().get_end(map.get());
       Road road = pathfinder_map(map.get(), pos, clk_pos,

@@ -332,6 +332,7 @@ typedef enum Action {
   ACTION_GAME_OPTIONS_CheckPathBeforeAttack,
   ACTION_GAME_OPTIONS_SpinningAmigaStar,
   ACTION_GAME_OPTIONS_HighMinerFoodConsumption,
+  ACTION_GAME_OPTIONS_UIScale,
   ACTION_MAPGEN_ADJUST_TREES,
   ACTION_MAPGEN_ADJUST_STONEPILES,
   ACTION_MAPGEN_ADJUST_FISH,
@@ -2224,6 +2225,22 @@ PopupBox::draw_game_options4_box() {
   draw_green_string(3, 10, "High Miner Food Consumption");
   draw_popup_icon(1, 7, option_HighMinerFoodConsumption ? 288 : 220);
 
+  draw_green_string(3, 29, "UI resize");
+  draw_popup_icon(1, 26, option_UIScale > 1 ? 288 : 220);
+  // figure out the max scale that fits, to mark when we're at the ceiling
+  int uis_w = 0;
+  int uis_h = 0;
+  interface->get_size(&uis_w, &uis_h);
+  int uis_mw = uis_w / 350;
+  int uis_mh = uis_h / 273;
+  int uis_max = (uis_mw < uis_mh) ? uis_mw : uis_mh;
+  if (uis_max < 1) uis_max = 1;
+  if (uis_max > 8) uis_max = 8;
+  std::string ui_scale_str = "x";
+  ui_scale_str += static_cast<char>('0' + option_UIScale);
+  if (option_UIScale >= uis_max) ui_scale_str += " MAX";
+  draw_green_string(15, 29, ui_scale_str);
+
 /*
   draw_green_string(3, 29, "Randomize Music Instruments");
   draw_popup_icon(1, 26, option_RandomizeInstruments ? 288 : 220);
@@ -3287,8 +3304,8 @@ PopupBox::internal_draw() {
     //  the popup being shifted every time it is redrawn!
     // Instead, center position relative to viewport which is absolute
     interface->get_viewport()->get_size(ptloadsave_pos_x, ptloadsave_pos_y);
-    loadsave_pos_x = *ptloadsave_pos_x / 2 - 144;
-    loadsave_pos_y = *ptloadsave_pos_y / 2 - 80;
+    loadsave_pos_x = *ptloadsave_pos_x / 2 - 144 * active_ui_scale;  // 144 = half of the 288-wide popup
+    loadsave_pos_y = *ptloadsave_pos_y / 2 - 80 * active_ui_scale;   // 80 = half of the 160-tall popup
     this->move_to(loadsave_pos_x, loadsave_pos_y);
   }else{
     draw_popup_box_frame();
@@ -4375,6 +4392,24 @@ PopupBox::handle_action(int action, int x_, int /*y_*/) {
     }
     GameOptions::get_instance().save_options_to_file();
     break;
+  case ACTION_GAME_OPTIONS_UIScale: {
+    // cycle UI magnification 1 -> 2 -> ... -> max-that-fits -> 1
+    //  (largest UI element is the 360x256 game-init box; cap at 8x)
+    int scr_w = 0;
+    int scr_h = 0;
+    interface->get_size(&scr_w, &scr_h);  // same size source Interface::layout uses, for a consistent max
+    int mf_w = scr_w / 350;
+    int mf_h = scr_h / 273;
+    int max_fit = (mf_w < mf_h) ? mf_w : mf_h;
+    if (max_fit < 1) max_fit = 1;
+    if (max_fit > 8) max_fit = 8;
+    option_UIScale++;
+    if (option_UIScale > max_fit) option_UIScale = 1;
+    GameOptions::get_instance().save_options_to_file();
+    // re-open this options page so the new scale takes effect and redraws immediately
+    interface->open_popup(box);
+    break;
+  }
   case ACTION_MAPGEN_ADJUST_TREES:
     Log::Info["popup"] << "ACTION_MAPGEN_ADJUST_TREES x_ = " << x_ << ", gui_get_slider_click_value(x_) = " << gui_get_slider_click_value(x_) << ", unint16_t(gui_get_slider_click_value(x_)) = " << uint16_t(gui_get_slider_click_value(x_));
     interface->set_custom_map_generator_trees(gui_get_slider_click_value(x_));         
@@ -4880,6 +4915,7 @@ PopupBox::handle_box_game_options4_clk(int cx, int cy) {
   //all options need to be defined here for the checkboxes to work,
   const int clkmap[] = {
     ACTION_GAME_OPTIONS_HighMinerFoodConsumption, 7, 7, 150, 16,
+    ACTION_GAME_OPTIONS_UIScale, 7, 26, 150, 16,
     //ACTION_GAME_OPTIONS_RandomizeInstruments, 7, 26, 150, 16,
     //ACTION_GAME_OPTIONS_AdvancedFarming, 7, 45, 150, 16,
     //ACTION_GAME_OPTIONS_ForesterMonoculture, 7, 64, 150, 16,

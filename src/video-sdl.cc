@@ -284,6 +284,8 @@ VideoSDL::create_texture(int width, int height) {
     throw ExceptionSDL("Unable to create SDL texture");
   }
 
+  // force nearest (no smoothing) explicitly -- the global hint isn't always honored
+  SDL_SetTextureScaleMode(texture, SDL_ScaleModeNearest);
   SDL_SetRenderTarget(renderer, texture);
   SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00);
@@ -299,6 +301,10 @@ VideoSDL::create_texture_from_data(void *data, int width, int height) {
   if (texture == nullptr) {
     throw ExceptionSDL("Unable to create SDL texture from data");
   }
+
+  // force nearest (no smoothing) explicitly -- the global scale-quality hint is not
+  //  always honored for surface-loaded textures (e.g. the custom PNG season dial)
+  SDL_SetTextureScaleMode(texture, SDL_ScaleModeNearest);
 
   SDL_FreeSurface(surf);
 
@@ -329,6 +335,22 @@ VideoSDL::draw_frame(int dx, int dy, Video::Frame *dest, int sx, int sy,
                         Video::Frame *src, int w, int h) {
   SDL_Rect dest_rect = { dx, dy, w, h };
   SDL_Rect src_rect = { sx, sy, w, h };
+
+  SDL_SetRenderTarget(renderer, dest->texture);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+  int r = SDL_RenderCopy(renderer, src->texture, &src_rect, &dest_rect);
+  if (r < 0) {
+    throw ExceptionSDL("RenderCopy error");
+  }
+}
+
+// scaled blit: copy a sw x sh region of src into a dw x dh region of dest
+//  (SDL scales it; nearest filtering keeps it pixel-crisp).  Used for UI scaling.
+void
+VideoSDL::draw_frame(int dx, int dy, Video::Frame *dest, int sx, int sy,
+                        Video::Frame *src, int sw, int sh, int dw, int dh) {
+  SDL_Rect dest_rect = { dx, dy, dw, dh };
+  SDL_Rect src_rect = { sx, sy, sw, sh };
 
   SDL_SetRenderTarget(renderer, dest->texture);
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);

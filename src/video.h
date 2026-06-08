@@ -82,6 +82,9 @@ class Video {
                           int y_offset, Frame *dest) = 0;
   virtual void draw_frame(int dx, int dy, Frame *dest, int sx, int sy,
                           Frame *src, int w, int h) = 0;
+  // scaled blit: copy a sw x sh region of src to a dw x dh region of dest
+  virtual void draw_frame(int dx, int dy, Frame *dest, int sx, int sy,
+                          Frame *src, int sw, int sh, int dw, int dh) {}
   virtual void draw_rect(int x, int y, unsigned int width, unsigned int height,
                          const Video::Color color, Frame *dest) = 0;
   virtual void fill_rect(int x, int y, unsigned int width, unsigned int height,

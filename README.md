@@ -9,9 +9,19 @@ Changes in this fork
 --------------------
 
 - **Settlers 1 style double-click to build**: a double left-click on the selected map
-  tile builds there, exactly like pressing the "1" panel button.  Toggle it with the
-  "DoubleClick" option in the in-game options; when it is off, the double-click is
-  inactive.
+  tile builds there, exactly like pressing the "1" panel button.
+- **Settlers 2 style road auto-routing**: while building a road, double-click a
+  destination flag or a distant tile to auto-route the whole road there (terrain-aware:
+  prefers flat ground, avoids water/obstacles), and it snaps to a nearby flag so it is
+  easier to hit.
+- **Scalable UI ("UI resize")**: a new option (in-game options, page 5) magnifies the
+  panel and popups from x1 up to x8 with nearest-neighbour scaling (no blur).  It
+  auto-detects the window resolution and never exceeds the magnification that fits
+  (shows "MAX" at the ceiling); the default is x3.
+- The double-click and special-click triggers (double-click, right+left, middle button)
+  are enabled by default.
+- UI fixes: the options window stays centred/uncut when the window is resized; the
+  message box closes with the tick or ESC; the in-game version number is shown correctly.
 
 Based on Forkserf's `stable` branch (upstream release v0.6.3).  Forkserf is a continuation
 of Freeserf (created by jonls and wdigger).  Upstream: https://github.com/forkserf/forkserf
@@ -29,7 +39,7 @@ Game Information Website
 Current Release
 ===============
 
-version 0.6.5 (fork by Grzegorz Korycki, 2026) -- based on upstream Forkserf release 0.6.3
+version 0.6.6 (fork by Grzegorz Korycki, 2026) -- based on upstream Forkserf release 0.6.3
 
 
 Play

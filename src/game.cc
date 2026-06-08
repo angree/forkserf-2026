@@ -71,6 +71,8 @@ bool option_SpecialClickBoth = true;
 bool option_SpecialClickMiddle = true;
 bool option_SpecialClickDouble = true;
 bool option_Sett1DoubleClick = true;   // Settlers1-style: double LEFT-click builds (emulates panel key "1"); takes precedence over SpecialClickDouble for the left button
+int option_UIScale = 3;     // user-selected UI magnification (1..N), cycled in options page 5; default x3 (auto-clamped to what fits the screen)
+int active_ui_scale = 1;    // effective UI scale (clamped to what fits the screen), set by Interface::layout
 bool option_SailorsMoveFaster = true;
 bool option_WaterDepthLuminosity = true;
 bool option_RandomizeInstruments = false;  // only affects DOS music
@@ -261,6 +263,7 @@ Game::reset_game_options_defaults() {
   option_SpecialClickMiddle = true;
   option_SpecialClickDouble = true;
   option_Sett1DoubleClick = true;
+  option_UIScale = 3;
   option_SailorsMoveFaster = true;
   option_WaterDepthLuminosity = true;
   option_RandomizeInstruments = false;  // only affects DOS music

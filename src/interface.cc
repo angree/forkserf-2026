@@ -179,16 +179,9 @@ Interface::open_popup(int box) {
      //Log::Debug["interface.cc"] << "inside Interface::open_popup(), for popup type " << box << ", drawing double-wide";
     // double wide, normal height
     popup->set_size(288, 160);
-    // recenter the popup
-    //   because the popup->get_position call requires providing pointers to ints,
-    //   we must create those ints and pointers and then check them after the call
-    int options_pos_x = 0;
-    int options_pos_y = 0;
-    int *ptoptions_pos_x = &options_pos_x;
-    int *ptoptions_pos_y = &options_pos_y;
-    popup->get_position(ptoptions_pos_x, ptoptions_pos_y);
-    options_pos_x = *ptoptions_pos_x;
-    popup->move_to(options_pos_x, options_pos_y);
+    // recenter the (double-wide) popup, accounting for the active UI scale
+    popup->move_to((width - 288 * active_ui_scale) / 2,
+                   (height - 160 * active_ui_scale) / 2);
   }
   /* this doesn't work here, not exactly clear why
     I think because needs to include popup.h to get type, but found alternate solution anyway
@@ -1108,6 +1101,23 @@ Interface::internal_draw() {
 void
 Interface::layout() {
   Log::Debug["interface.cc"] << "inside Interface::layout";
+
+  // Determine the effective UI scale.  The user picks option_UIScale (1..N) but we
+  //  never use a scale larger than what fits the screen; the largest UI element is the
+  //  game-init box at 360x256, so that bounds the maximum magnification.
+  // Max UI scale that fits the screen.  The UI footprint reference is 350x273 (at x1),
+  //  fractions truncated, take the smaller of the width/height factors.  So at 1920x1080
+  //  this gives x3 (1920/350=5, 1080/273=3); cap at x8 for very large screens.
+  int max_fit_w = width  / 350;
+  int max_fit_h = height / 273;
+  int max_fit = (max_fit_w < max_fit_h) ? max_fit_w : max_fit_h;
+  if (max_fit < 1) max_fit = 1;
+  if (max_fit > 8) max_fit = 8;
+  active_ui_scale = option_UIScale;
+  if (active_ui_scale < 1) active_ui_scale = 1;
+  if (active_ui_scale > max_fit) active_ui_scale = max_fit;
+  int s = active_ui_scale;
+
   int panel_x = 0;
   int panel_y = height;
 
@@ -1115,18 +1125,27 @@ Interface::layout() {
     Log::Debug["interface.cc"] << "inside Interface::layout, panel is defined";
     int panel_width = 352;
     int panel_height = 40;
-    panel_x = (width - panel_width) / 2;
-    panel_y = height - panel_height;
+    panel_x = (width - panel_width * s) / 2;
+    panel_y = height - panel_height * s;
     panel->move_to(panel_x, panel_y);
     panel->set_size(panel_width, panel_height);
   }
 
   if (popup != nullptr) {
     Log::Debug["interface.cc"] << "inside Interface::layout, popup is defined";
+    // keep the correct width for double-wide (options/mapgen/loadsave) popups so a
+    //  window resize does not shrink an open large popup and clip it off-screen
     int popup_width = 144;
     int popup_height = 160;
-    int popup_x = (width - popup_width) / 2;
-    int popup_y = (height - popup_height) / 2;
+    PopupBox::Type pbox = popup->get_box();
+    if (pbox == PopupBox::TypeOptions || pbox == PopupBox::TypeGameOptions ||
+        pbox == PopupBox::TypeGameOptions2 || pbox == PopupBox::TypeGameOptions3 ||
+        pbox == PopupBox::TypeGameOptions4 || pbox == PopupBox::TypeEditMapGenerator ||
+        pbox == PopupBox::TypeEditMapGenerator2 || pbox == PopupBox::TypeLoadSave) {
+      popup_width = 288;
+    }
+    int popup_x = (width - popup_width * s) / 2;
+    int popup_y = (height - popup_height * s) / 2;
     popup->move_to(popup_x, popup_y);
     popup->set_size(popup_width, popup_height);
   //}else{
@@ -1137,8 +1156,8 @@ Interface::layout() {
     Log::Debug["interface.cc"] << "inside Interface::layout, init_box is defined";
     int init_box_width = 360;
     int init_box_height = 256;
-    int init_box_x = (width - init_box_width) / 2;
-    int init_box_y = (height - init_box_height) / 2;
+    int init_box_x = (width - init_box_width * s) / 2;
+    int init_box_y = (height - init_box_height * s) / 2;
     init_box->move_to(init_box_x, init_box_y);
     init_box->set_size(init_box_width, init_box_height);
   }
@@ -1146,9 +1165,9 @@ Interface::layout() {
   if (notification_box != nullptr) {
     Log::Debug["interface.cc"] << "inside Interface::layout, notification_box is defined";
     int notification_box_width = 200;
-    int notification_box_height = 88;
-    int notification_box_x = panel_x + 40;
-    int notification_box_y = panel_y - notification_box_height;
+    int notification_box_height = 144;  // must be tall enough for the close checkbox drawn at y=128
+    int notification_box_x = panel_x + 40 * s;
+    int notification_box_y = panel_y - notification_box_height * s;
     notification_box->move_to(notification_box_x, notification_box_y);
     notification_box->set_size(notification_box_width, notification_box_height);
   }

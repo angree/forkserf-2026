@@ -41,6 +41,8 @@ extern bool option_SpecialClickBoth;
 extern bool option_SpecialClickMiddle;
 extern bool option_SpecialClickDouble;
 extern bool option_Sett1DoubleClick;
+extern int option_UIScale;     // user-selected UI magnification (1..N)
+extern int active_ui_scale;    // effective UI scale after fit-clamp (set by Interface::layout)
 extern bool option_SailorsMoveFaster;
 extern bool option_WaterDepthLuminosity;
 extern bool option_RandomizeInstruments;  // only affects DOS music

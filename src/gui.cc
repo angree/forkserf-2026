@@ -107,6 +107,7 @@ GuiObject::draw(Frame *_frame) {
       if (float_window->get_objclass() == GuiObjClass::ClassPanelBar || float_window->get_objclass() == GuiObjClass::ClassPopupBox
        || float_window->get_objclass() == GuiObjClass::ClassGameInitBox || float_window->objclass == GuiObjClass::ClassNotificationBox
                  ){
+        if (!float_window->is_displayed()) continue;  // skip hidden UI (e.g. a closed notification box)
         //Log::Debug["gui.cc"] << "inside GuiObject::draw, float_window->objclass " << float_window->get_objclass() << ", is_drawing_ui is true, this is UI element, drawing it";
         if (float_window->frame == nullptr) {
           //Log::Debug["event_loop.cc"] << "inside GuiObject::draw, drawing_ui true, this is UI element, its internal frame is nullptr, creating it";
@@ -120,7 +121,10 @@ GuiObject::draw(Frame *_frame) {
           //float_window->frame = Graphics::get_instance().create_frame(screen_width, screen_height);
           float_window->internal_draw();
         }
-        _frame->draw_frame(float_window->x, float_window->y, 0, 0, float_window->frame, float_window->width, float_window->height);
+        int s = active_ui_scale;
+        _frame->draw_frame(float_window->x, float_window->y, 0, 0, float_window->frame,
+                           float_window->width, float_window->height,
+                           float_window->width * s, float_window->height * s);
       }
     }
     return;
@@ -206,6 +210,17 @@ GuiObject::handle_event(const Event *event) {
     event_y = event->y - y;
     event_unscaled_x = event->unscaled_x - x;
     event_unscaled_y = event->unscaled_y - y;
+
+    // UI-scale: scaled UI elements (panel/popups/etc.) occupy width*scale x height*scale
+    //  screen pixels but draw their contents at native size, so map the click back into
+    //  the element's native coordinate space.  Nested floats (minimap, file lists, ...)
+    //  are not in this list and inherit the already-converted coords from their parent.
+    if (active_ui_scale > 1 &&
+        (objclass == GuiObjClass::ClassPanelBar || objclass == GuiObjClass::ClassPopupBox ||
+         objclass == GuiObjClass::ClassGameInitBox || objclass == GuiObjClass::ClassNotificationBox)) {
+      event_unscaled_x /= active_ui_scale;
+      event_unscaled_y /= active_ui_scale;
+    }
 
     /* this doesn't work right, it messes up the viewport pointer location
     // to avoid Viewport click/drag appearing not in_scope when zoomed, use actual window size for viewport

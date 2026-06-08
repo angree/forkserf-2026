@@ -781,6 +781,12 @@ Frame::draw_frame(int dx, int dy, int sx, int sy, Frame *src, int w, int h) {
 }
 
 void
+Frame::draw_frame(int dx, int dy, int sx, int sy, Frame *src,
+                  int sw, int sh, int dw, int dh) {
+  video->draw_frame(dx, dy, video_frame, sx, sy, src->video_frame, sw, sh, dw, dh);
+}
+
+void
 Frame::draw_line(int x, int y, int x1, int y1, const Color &color) {
   Video::Color c = {color.get_red(),
                     color.get_green(),
